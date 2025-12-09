@@ -1,6 +1,11 @@
-test_job:
-  stage: test
-  tags:
-    - DevSecOps
-  script:
-    - echo "Pipeline Work GitLab..."
+stages:                       
+  - test                     
+maven_test_and_checkstyle:   
+  stage: test                
+  image: maven:3.9-eclipse-temurin-17  
+  tags:                      
+    - DevSecOps              
+  script:                    
+    - echo "Code checkout by GitLab is automatic" 
+    - mvn test               
+    - mvn checkstyle:checkstyle  
