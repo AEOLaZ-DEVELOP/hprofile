@@ -3,4 +3,4 @@ test_job:
   tags:
     - DevSecOps
   script:
-    - echo "Pipeline Work GitLab"
+    - echo "Pipeline Work GitLab..."
