@@ -1,4 +1,6 @@
 test_job:
   stage: test
+  tags:
+    - DevSecOps
   script:
     - echo "Pipeline works!"
