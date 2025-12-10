@@ -65,6 +65,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}           # GitHub auto-token
           SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}            # token ของ SonarCloud
           SONAR_HOST_URL: "https://sonarcloud.io"             # host fix ค่าแบบนี้
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }} # สำคัญ!
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }} # สำคัญ
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} 
 
