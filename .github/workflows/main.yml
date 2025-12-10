@@ -62,9 +62,8 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}           # GitHub auto-token
-          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}            # token ของ SonarCloud
-          SONAR_HOST_URL: "https://sonarcloud.io"             # host fix ค่าแบบนี้
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }} # สำคัญ
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} 
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "https://sonarcloud.io"
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
