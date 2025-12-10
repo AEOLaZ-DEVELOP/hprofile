@@ -33,37 +33,38 @@
 #           -Dsonar.jacoco.reportsPath=target/jacoco.exec
 #           -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
 
-
-name: Hprofile Actions                                   # ชื่อ workflow
+name: Hprofile Actions
 
 on:
-  push:                                                  # ให้รันอัตโนมัติเมื่อมีการ push
-    branches: [ main ]                                   # เฉพาะ branch main
-  pull_request:                                          # และเมื่อมี PR เข้ามา
+  push:
+    branches: [ main ]
+  pull_request:
 
 jobs:
   sonarcloud:
-    runs-on: ubuntu-latest                               # ใช้ runner Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4                        # ดึงโค้ดจาก repo
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0                                 # ดึง history ทั้งหมด (ดีต่อ Sonar สำหรับ compare)
+          fetch-depth: 0          # สำคัญมาก เพื่อให้ sonar เทียบ diff ได้
 
       - name: Set up Java
-        uses: actions/setup-java@v4                      # ติดตั้ง JDK
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'                        # ใช้ Temurin
-          java-version: '17'                             # ใช้ Java 17 (หรือ 11 ก็ได้ ถ้าโปรเจกต์บังคับ)
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Build & Test (Maven verify)
-        run: mvn -B verify                               # compile + test + สร้าง class + reports ครบ (แก้ปัญหา sonar.java.binaries)
+        run: mvn -B verify
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2    # ใช้ action official ของ SonarCloud
+        uses: SonarSource/sonarcloud-github-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}      # token ของ GitHub (ให้ Sonar อ่าน PR / commit ได้)
-          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}       # token ของ SonarCloud (ตัวเดียวกับที่น้องสร้างไว้แล้ว)
-          # ไม่ต้องใส่ SONAR_URL, SONAR_ORGANIZATION, SONAR_PROJECT_KEY ก็ได้
-          # เพราะ SonarCloud จะรู้เองจากการเชื่อม GitHub App + project ที่สร้างไว้
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}           # GitHub auto-token
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}            # token ของ SonarCloud
+          SONAR_HOST_URL: "https://sonarcloud.io"             # host fix ค่าแบบนี้
+          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }} # สำคัญ!
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} 
+
