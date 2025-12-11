@@ -98,11 +98,11 @@ jobs:
           distribution: 'temurin'             # ใช้ Temurin (Adoptium)
           java-version: '11'                  # ใช้ Java 17 (ถ้าโปรเจกต์บังคับ 11 ก็เปลี่ยนเป็น '11')
 
-      # - name: Build & Test (Maven verify)
-      #   run: mvn -B verify                    # compile + test + สร้าง .class + reports ครบ (สำคัญมาก)
+      - name: Build & Test (Maven verify)
+        run: mvn -B verify                    # compile + test + สร้าง .class + reports ครบ (สำคัญมาก)
 
-      # - name: Setup sonar-scanner CLI
-      #   uses: warchant/setup-sonar-scanner@v7 # ติดตั้ง sonar-scanner แบบ CLI (สไตล์เดียวกับใน vdo)
+      - name: Setup sonar-scanner CLI
+        uses: warchant/setup-sonar-scanner@v7 # ติดตั้ง sonar-scanner แบบ CLI (สไตล์เดียวกับใน vdo)
 
       - name: Run sonar-scanner (SonarCloud)
         run: |                                # รันคำสั่งหลายบรรทัด
