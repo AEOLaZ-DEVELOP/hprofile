@@ -76,14 +76,21 @@ on:
   workflow_dispatch:                          # ให้รันแบบ manual (กด Run workflow เองจากหน้า Actions)
 
 jobs:
-  sonarcloud-legacy:                          # ชื่อ job
+  # sonarcloud-legacy:                          # ชื่อ job
+  testing:
     runs-on: ubuntu-latest                    # ใช้ GitHub runner บน Ubuntu
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4             # ดึงโค้ดจาก repo
-        with:
-          fetch-depth: 0                      # ดึง history ทั้งหมด (ให้ Sonar ใช้เทียบ diff ได้)
+        # with:
+        #   fetch-depth: 0                      # ดึง history ทั้งหมด (ให้ Sonar ใช้เทียบ diff ได้)
+
+      - name: Maven test 
+        run: mvn test
+      
+      - name: Checkstyle                      
+        run: mvn checkstyle:checkstyle        
 
       - name: Set up Java
         uses: actions/setup-java@v3           # ติดตั้ง JDK
@@ -91,11 +98,11 @@ jobs:
           distribution: 'temurin'             # ใช้ Temurin (Adoptium)
           java-version: '11'                  # ใช้ Java 17 (ถ้าโปรเจกต์บังคับ 11 ก็เปลี่ยนเป็น '11')
 
-      - name: Build & Test (Maven verify)
-        run: mvn -B verify                    # compile + test + สร้าง .class + reports ครบ (สำคัญมาก)
+      # - name: Build & Test (Maven verify)
+      #   run: mvn -B verify                    # compile + test + สร้าง .class + reports ครบ (สำคัญมาก)
 
-      - name: Setup sonar-scanner CLI
-        uses: warchant/setup-sonar-scanner@v7 # ติดตั้ง sonar-scanner แบบ CLI (สไตล์เดียวกับใน vdo)
+      # - name: Setup sonar-scanner CLI
+      #   uses: warchant/setup-sonar-scanner@v7 # ติดตั้ง sonar-scanner แบบ CLI (สไตล์เดียวกับใน vdo)
 
       - name: Run sonar-scanner (SonarCloud)
         run: |                                # รันคำสั่งหลายบรรทัด
@@ -108,7 +115,7 @@ jobs:
             -Dsonar.java.binaries=target/classes \
             -Dsonar.junit.reportsPath=target/surefire-reports \
             -Dsonar.jacoco.reportsPath=target/jacoco.exec
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}           # token SonarCloud (สร้างจาก My Account → Security)
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} # key ของ org (ดูจากหน้า Organization)
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}   # key ของ project (ดูจาก Project Information)
+        # env:
+        #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}           # token SonarCloud (สร้างจาก My Account → Security)
+        #   SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} # key ของ org (ดูจากหน้า Organization)
+        #   SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}   # key ของ project (ดูจาก Project Information)
