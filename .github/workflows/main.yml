@@ -1,122 +1,74 @@
-name: Hprofile Actions               
-on: workflow_dispatch                
-jobs:                                
-  Testing:                           
-    runs-on: ubuntu-latest           
-    steps:                           
-      - name: Code checkout          
-        uses: actions/checkout@v4   
+# -------- Version VDO --------
+# name: Hprofile Actions               
+# on: workflow_dispatch                
+# jobs:                                
+#   Testing:                           
+#     runs-on: ubuntu-latest           
+#     steps:                           
+#       - name: Code checkout          
+#         uses: actions/checkout@v4   
 
-      - name: Maven test             
-        run: mvn test                
+#       - name: Maven test             
+#         run: mvn test                
       
-      - name: Checkstyle             
-        run: mvn checkstyle:checkstyle   
+#       - name: Checkstyle             
+#         run: mvn checkstyle:checkstyle   
 
-      - name: Set Java 11
-        uses: actions/setup-java@v3
+#       - name: Set Java 11
+#         uses: actions/setup-java@v3
+#         with:
+#           distribution: 'temurin'
+#           java-version: '11'
+
+#       - name: Setup SonarQube
+#         uses: warchant/setup-sonar-scanner@v7
+
+#       - name: SonarQube Scan
+#         run: sonar-scanner
+#           -Dsonar.host.url=${{ secrets.SONAR_URL }}
+#           -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+#           -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+#           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+#           -Dsonar.sources=src/
+#           -Dsonar.junit.reportsPath=target/surefire-reports/
+#           -Dsonar.jacoco.reportsPath=target/jacoco.exec
+#           -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+#           -Dsonar.java.test.binaries=target/test-classes                      # path เต็มไม่ควรเขียน  -Dsonar.java.binaries=target/test-classes/com/visualpathit/account
+
+# -------- Version GPT --------
+name: Hprofile Actions
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                       
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Setup SonarQube
-        uses: warchant/setup-sonar-scanner@v7
+      - name: Build & Test (Maven verify)
+        run: mvn -B verify                     
 
-      - name: SonarQube Scan
-        run: sonar-scanner
-          -Dsonar.host.url=${{ secrets.SONAR_URL }}
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-          -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-          -Dsonar.sources=src/
-          -Dsonar.junit.reportsPath=target/surefire-reports/
-          -Dsonar.jacoco.reportsPath=target/jacoco.exec
-          -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
-          -Dsonar.java.binaries=target/test-classes/com/visualpathit/account
-
-# name: Hprofile Actions
-
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-
-# jobs:
-#   sonarcloud:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0                        # ✅
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v4
-#         with:
-#           distribution: 'temurin'
-#           java-version: '17'
-
-#       - name: Build & Test (Maven verify)
-#         run: mvn -B verify                      # ✅ มีการ build + test แล้ว
-
-#       - name: SonarCloud Scan
-#         uses: SonarSource/sonarcloud-github-action@v2
-#         with:
-#           args: >
-#             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-#             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-#             -Dsonar.java.binaries=target/classes
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#           SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}
-
-# name: Hprofile Legacy SonarCloud              # ชื่อ workflow (แบบ legacy ใช้ sonar-scanner ตรง ๆ)
-
-# on:
-#   workflow_dispatch:                          # ให้รันแบบ manual (กด Run workflow เองจากหน้า Actions)
-
-# jobs:
-#   # sonarcloud-legacy:                          # ชื่อ job
-#   testing:
-#     runs-on: ubuntu-latest                    # ใช้ GitHub runner บน Ubuntu
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4             # ดึงโค้ดจาก repo
-#         # with:
-#         #   fetch-depth: 0                      # ดึง history ทั้งหมด (ให้ Sonar ใช้เทียบ diff ได้)
-
-#       - name: Maven test 
-#         run: mvn test
-      
-#       - name: Checkstyle                      
-#         run: mvn checkstyle:checkstyle        
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v3           # ติดตั้ง JDK
-#         with:
-#           distribution: 'temurin'             # ใช้ Temurin (Adoptium)
-#           java-version: '11'                  # ใช้ Java 17 (ถ้าโปรเจกต์บังคับ 11 ก็เปลี่ยนเป็น '11')
-
-#       # - name: Build & Test (Maven verify)
-#       #   run: mvn -B verify                    # compile + test + สร้าง .class + reports ครบ (สำคัญมาก)
-
-#       - name: Setup sonar-scanner CLI
-#         uses: warchant/setup-sonar-scanner@v7 # ติดตั้ง sonar-scanner แบบ CLI (สไตล์เดียวกับใน vdo)
-
-#       - name: Run sonar-scanner (SonarCloud)
-#         run: |                                # รันคำสั่งหลายบรรทัด
-#           sonar-scanner \
-#             -Dsonar.host.url=https://sonarcloud.io \
-#             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-#             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
-#             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-#             -Dsonar.sources=src \
-#             -Dsonar.java.binaries=target/classes \
-#             -Dsonar.junit.reportsPath=target/surefire-reports \
-#             -Dsonar.jacoco.reportsPath=target/jacoco.exec
-#         # env:
-#         #   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}           # token SonarCloud (สร้างจาก My Account → Security)
-#         #   SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} # key ของ org (ดูจากหน้า Organization)
-#         #   SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}   # key ของ project (ดูจาก Project Information)
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.java.binaries=target/classes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}
