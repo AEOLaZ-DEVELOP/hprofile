@@ -36,7 +36,7 @@
 #           -Dsonar.java.binaries=target/test-classes                         
 
 # -------- Version GPT --------
-name: Hprofile Actions
+name: Hprofile Action
 
 on:
   push:
