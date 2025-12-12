@@ -1,6 +1,8 @@
 # -------- Version VDO --------
 name: Hprofile Actions               
-on: workflow_dispatch                
+on: workflow_dispatch  
+env:
+  AWS_REGION: us-east-2        
 jobs:                                
   Testing:                           
     runs-on: ubuntu-latest           
@@ -35,50 +37,29 @@ jobs:
           -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
           -Dsonar.java.binaries=target/test-classes                         
 
-      # --- Check the Quality Gate status ---
       - name: SonarCloud Quality Gate check
         id: sonarcloud-quality-gate
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_URL }}                                # option
 
+      - name: Update application.properties file        # แก้ค่า config แอปก่อน build
+        run: |
+          sed -i "s/^jdbc.username.*/jdbc.username=${{ secrets.RDS_USER }}/" src/main/resources/application.properties
+          sed -i "s/^jdbc.password.*/jdbc.password=${{ secrets.RDS_PASS }}/" src/main/resources/application.properties
+          sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
 
-# -------- Version GPT --------
-# name: Hprofile Actions
-
-# on:
-#   push:
-#     branches: [ main ]
-#   pull_request:
-
-# jobs:
-#   sonarcloud:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0                       
-
-#       - name: Set up Java
-#         uses: actions/setup-java@v4
-#         with:
-#           distribution: 'temurin'
-#           java-version: '11'
-
-#       - name: Build & Test (Maven verify)
-#         run: mvn -B verify                     
-
-#       - name: SonarCloud Scan
-#         uses: SonarSource/sonarcloud-github-action@v2
-#         with:
-#           args: >
-#             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-#             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-#             -Dsonar.java.binaries=target/classes
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#           SONAR_TOKEN:  ${{ secrets.SONAR_TOKEN }}
+      - name: Build & Upload image to ECR                 
+        uses: appleboy/docker-ecr-action@master
+        with:
+          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}   
+          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}# AWS IAM secret key
+          registry: ${{ secrets.REGISTRY }}                
+          repo: actapp                                     
+          region: ${{ env.AWS_REGION }}                   
+          tags: latest,${{ github.run_number }}            
+          daemon_off: false                                
+          dockerfile: ./Dockerfile                         
+          context: ./                                      
