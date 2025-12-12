@@ -43,7 +43,7 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_URL }}                                # option
+          SONAR_HOST_URL: ${{ secrets.SONAR_URL }}                               
 
   BUILD_AND_PUBLISH:                 
     needs: Testing                   
