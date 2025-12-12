@@ -60,8 +60,7 @@ jobs:
           sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
 
       - name: Build & Upload image to ECR                 
-        # uses: appleboy/docker-ecr-action@master
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: appleboy/docker-ecr-action@master
         with:
           access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}   
           secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}# AWS IAM secret key
