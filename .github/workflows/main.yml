@@ -3,6 +3,11 @@ name: Hprofile Actions
 on: workflow_dispatch  
 env:
   AWS_REGION: us-east-1
+  ECR_REPOSITORY: actapp                                                                          
+  ECS_SERVICE: vproapp-act-svc                                                                    
+  ECS_CLUSTER: vproapp-act                                                                        
+  ECS_TASK_DEFINITION: aws-files/taskdeffile.json                                                 
+  CONTAINER_NAME: vproapp
 jobs:                                
   Testing:                           
     runs-on: ubuntu-latest           
@@ -45,29 +50,57 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_URL }}                               
+BUILD_AND_PUBLISH:                 
+  needs: Testing                   
+  runs-on: ubuntu-latest           
+  steps:                           
+    - name: Code checkout          
+      uses: actions/checkout@v4    
 
-  BUILD_AND_PUBLISH:                 
-    needs: Testing                   
-    runs-on: ubuntu-latest           
-    steps:                           
-      - name: Code checkout          
-        uses: actions/checkout@v4    
+    - name: Update application.properties file
+      run: |
+        sed -i "s/^jdbc.username.*/jdbc.username=${{ secrets.RDS_USER }}/" src/main/resources/application.properties
+        sed -i "s/^jdbc.password.*/jdbc.password=${{ secrets.RDS_PASSWORD }}/" src/main/resources/application.properties
+        sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
 
-      - name: Update application.properties file
-        run: |
-          sed -i "s/^jdbc.username.*/jdbc.username=${{ secrets.RDS_USER }}/" src/main/resources/application.properties
-          sed -i "s/^jdbc.password.*/jdbc.password=${{ secrets.RDS_PASSWORD }}/" src/main/resources/application.properties
-          sed -i "s/db01/${{ secrets.RDS_ENDPOINT }}/" src/main/resources/application.properties
-
-      - name: Build & Upload image to ECR                 
-        uses: appleboy/docker-ecr-action@master
+    - name: Build & Upload image to ECR                 
+      uses: appleboy/docker-ecr-action@master
+      with:
+        access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}   
+        secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        registry: ${{ secrets.REGISTRY }}                
+        repo: actapp                                     
+        region: ${{ env.AWS_REGION }}                   
+        tags: latest,${{ github.run_number }}            
+        daemon_off: false                                
+        dockerfile: ./Dockerfile                         
+        context: ./                                      
+Deploy:                                                                                             
+  needs: BUILD_AND_PUBLISH                                                                        
+  runs-on: ubuntu-latest                                                                          
+  steps:                                                                                          
+      - name: Code checkout                                                                       
+        uses: actions/checkout@v4                                                                 
+      
+      - name: Configure AWS credentials                                                           
+        uses: aws-actions/configure-aws-credentials@e0613a0980cbf65ed5b322eb7a1e075d28913a83      
         with:
-          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}   
-          secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          registry: ${{ secrets.REGISTRY }}                
-          repo: actapp                                     
-          region: ${{ env.AWS_REGION }}                   
-          tags: latest,${{ github.run_number }}            
-          daemon_off: false                                
-          dockerfile: ./Dockerfile                         
-          context: ./                                      
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}                                    
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}                              
+          aws-region: ${{ env.AWS_REGION }}                                                       
+
+      - name: Fill in the new image ID in the Amazon ECS task definition                        
+        id: task-def                                                                           
+        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7    
+        with:                                                                                   
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}                                    
+          container-name: ${{ env.CONTAINER_NAME }}                                          
+          image: ${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.run_number }}  
+      
+      - name: Deploy Amazon ECS task definition                                                 
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1                                
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}                   
+          service: ${{ env.ECS_SERVICE }}                                                    
+          cluster: ${{ env.ECS_CLUSTER }}                                                     
+          wait-for-service-stability: true 
